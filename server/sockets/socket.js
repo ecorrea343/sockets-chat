@@ -8,14 +8,16 @@ io.on('connection', (client) => {
 
     client.on('entrarChat', ( data, callback ) => {
 
-        if (!data.nombre) {
+        if (!data.nombre || !data.sala ) {
             return callback({
                 error: true,
                 mensaje: 'El nombre'
             });
         }
 
-        let personas = usuarios.agregarPersona( client.id, data.nombre );
+        client.join(data.sala);
+
+        let personas = usuarios.agregarPersona( client.id, data.nombre, data.sala );
 
         client.broadcast.emit('listaPersona',usuarios.getPersonas())
 
@@ -38,6 +40,14 @@ io.on('connection', (client) => {
        client.broadcast.emit('crearMensaje',crearMensaje('Administrador',`${ personaBorrada.nombre } salio`) )
        client.broadcast.emit('listaPersona',usuarios.getPersonas())
         
+    })
+
+    //Mensaje Privado
+    client.on('mensajePrivado', data =>{
+
+        let persona = usuarios.getPersona(client.id);
+        client.broadcast.to(data.para).emit('mensajePrivado', crearMensaje( persona.nombre, data.mensaje ) );
+
     })
 
 });
